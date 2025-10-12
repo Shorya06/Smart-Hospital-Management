@@ -57,6 +57,7 @@ const Appointments = () => {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
+    console.log('Appointments useEffect triggered, user:', user);
     fetchAppointments();
     if (user?.role === 'patient') {
       fetchDoctors();
@@ -66,10 +67,13 @@ const Appointments = () => {
   const fetchAppointments = async () => {
     try {
       setLoading(true);
+      console.log('Fetching appointments...');
       const response = await appointmentAPI.getAppointments();
+      console.log('Appointments response:', response);
       setAppointments(response.data);
     } catch (error) {
       console.error('Error fetching appointments:', error);
+      console.error('Error details:', error.response?.data);
       // Mock data for demo
       setAppointments([
         {
