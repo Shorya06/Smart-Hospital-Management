@@ -58,6 +58,7 @@ const Appointments = () => {
 
   useEffect(() => {
     console.log('Appointments useEffect triggered, user:', user);
+    console.log('User role:', user?.role);
     fetchAppointments();
     if (user?.role === 'patient') {
       fetchDoctors();
@@ -70,7 +71,11 @@ const Appointments = () => {
       console.log('Fetching appointments...');
       const response = await appointmentAPI.getAppointments();
       console.log('Appointments response:', response);
-      setAppointments(response.data);
+      // Handle paginated response
+      const appointmentsData = response.data.results || response.data;
+      console.log('Processed appointments data:', appointmentsData);
+      console.log('Number of appointments:', appointmentsData.length);
+      setAppointments(appointmentsData);
     } catch (error) {
       console.error('Error fetching appointments:', error);
       console.error('Error details:', error.response?.data);
@@ -112,7 +117,9 @@ const Appointments = () => {
   const fetchDoctors = async () => {
     try {
       const response = await doctorAPI.getDoctors();
-      setDoctors(response.data);
+      // Handle paginated response
+      const doctorsData = response.data.results || response.data;
+      setDoctors(doctorsData);
     } catch (error) {
       console.error('Error fetching doctors:', error);
       // Mock data for demo
@@ -236,7 +243,23 @@ const Appointments = () => {
 
       {/* Appointments Grid */}
       <Grid container spacing={3}>
-        {appointments.map((appointment) => (
+        {appointments.length === 0 ? (
+          <Grid item xs={12}>
+            <Card>
+              <CardContent sx={{ textAlign: 'center', py: 4 }}>
+                <Typography variant="h6" color="text.secondary" gutterBottom>
+                  No appointments found
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {user?.role === 'patient' 
+                    ? 'You don\'t have any appointments scheduled yet.' 
+                    : 'No appointments are currently scheduled.'}
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+        ) : (
+          appointments.map((appointment) => (
           <Grid item xs={12} md={6} lg={4} key={appointment.id}>
             <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
               <CardContent sx={{ flexGrow: 1 }}>
@@ -301,7 +324,8 @@ const Appointments = () => {
               </CardActions>
             </Card>
           </Grid>
-        ))}
+        ))
+        )}
       </Grid>
 
       {/* Floating Action Button */}
