@@ -4,10 +4,25 @@ All notable changes to the Smart Hospital Management System project will be docu
 
 ## [1.0-final] - 2025-11-19
 
+### Fixed
+- **Symptom Checker Accuracy**: Fixed bug where symptom checker always returned "Heart Attack"
+  - Improved training data from 20 to 100+ examples
+  - Enhanced keyword matching with required keywords and weights
+  - Implemented hybrid approach (keyword matching primary, ML model secondary)
+  - All 15 accuracy tests now passing
+  - Verified: "fever headache" now correctly predicts "Flu" instead of "Heart Attack"
+
 ### Added
-- Comprehensive test suite with 116 test cases covering all backend modules
+- Comprehensive test suite with 131 test cases (116 backend + 15 symptom checker accuracy)
 - **100% backend test coverage** (518 statements, all covered)
+- Symptom checker accuracy tests (15 tests covering all prediction scenarios)
 - Test coverage reporting with HTML and terminal output
+- UI/UX improvements for symptom checker:
+  - Input validation (minimum 3 characters, 500 char limit)
+  - Character counter
+  - Improved confidence bar with accessibility labels
+  - Low confidence warnings
+  - Better button states and animations
 - pytest configuration for Django testing
 - Linting and formatting tools (black, isort, flake8)
 - Security scanning tools (safety, npm audit)

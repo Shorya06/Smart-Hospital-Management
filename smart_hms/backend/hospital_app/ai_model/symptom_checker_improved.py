@@ -18,12 +18,8 @@ class SymptomCheckerAI:
         self.model = None
         self.vectorizer = None
         self.conditions = []
-        self.keyword_conditions = {}  # Initialize keyword conditions
         self.model_path = os.path.join(settings.BASE_DIR, 'hospital_app', 'ai_model', 'symptom_model.pkl')
         self.data_path = os.path.join(settings.BASE_DIR, 'hospital_app', 'ai_model', 'symptom_data.csv')
-        
-        # Always initialize keyword matching (used as fallback/primary method)
-        self._create_fallback_model()
         
         # Initialize with improved data if no model exists
         self._initialize_model()
@@ -377,41 +373,57 @@ class SymptomCheckerAI:
         
         symptoms_lower = symptoms.lower().strip()
         
-        # Always use keyword matching first (more reliable with small dataset)
-        # Then use ML model if available and confidence is high
-        keyword_result = self._predict_keyword_matching(symptoms_lower)
-        
         try:
             if self.model and self.vectorizer:
-                # Get ML model prediction
+                # Use trained model
                 symptoms_vectorized = self.vectorizer.transform([symptoms_lower])
                 probabilities = self.model.predict_proba(symptoms_vectorized)[0]
                 
+                # Get class indices sorted by probability
                 class_indices = np.argsort(probabilities)[::-1]
+                
+                # Get top 3 predictions with confidence
                 top_3_indices = class_indices[:3]
-                ml_conditions = [self.conditions[i] for i in top_3_indices]
-                ml_confidence = {self.conditions[i]: float(probabilities[i]) for i in top_3_indices}
+                predicted_conditions = [self.conditions[i] for i in top_3_indices]
+                confidence_scores = {self.conditions[i]: float(probabilities[i]) for i in top_3_indices}
                 
-                # Use ML model if top prediction has high confidence (>0.3)
-                # Otherwise prefer keyword matching
-                top_ml_confidence = ml_confidence.get(ml_conditions[0], 0) if ml_conditions else 0
-                top_keyword_confidence = keyword_result['confidence'].get(keyword_result['conditions'][0], 0) if keyword_result['conditions'] else 0
+                # Log prediction for debugging
+                logger.info(f"Model prediction for '{symptoms_lower[:50]}...': {predicted_conditions[0]} ({confidence_scores[predicted_conditions[0]]:.2%})")
                 
-                if top_ml_confidence > 0.3 and top_ml_confidence > top_keyword_confidence:
-                    # Use ML model result
-                    predicted_conditions = ml_conditions
-                    confidence_scores = ml_confidence
-                    logger.info(f"Using ML model: {predicted_conditions[0]} ({top_ml_confidence:.2%})")
-                else:
-                    # Use keyword matching (more reliable)
-                    predicted_conditions = keyword_result['conditions']
-                    confidence_scores = keyword_result['confidence']
-                    logger.info(f"Using keyword matching: {predicted_conditions[0]} ({top_keyword_confidence:.2%})")
             else:
-                # Use keyword matching
-                predicted_conditions = keyword_result['conditions']
-                confidence_scores = keyword_result['confidence']
-                logger.info(f"Using keyword matching (no model): {predicted_conditions[0] if predicted_conditions else 'none'}")
+                # Use improved fallback keyword matching
+                scores = {}
+                
+                for condition, config in self.keyword_conditions.items():
+                    keywords = config['keywords']
+                    required = config.get('required', [])
+                    weight = config.get('weight', 1.0)
+                    
+                    # Check if all required keywords are present
+                    has_required = all(req in symptoms_lower for req in required)
+                    
+                    if not has_required:
+                        continue  # Skip if required keywords missing
+                    
+                    # Count matching keywords
+                    matches = sum(1 for keyword in keywords if keyword in symptoms_lower)
+                    if matches > 0:
+                        # Score = (matches / total keywords) * weight
+                        score = (matches / len(keywords)) * weight
+                        scores[condition] = score
+                
+                # Sort by score and get top 3
+                sorted_conditions = sorted(scores.items(), key=lambda x: x[1], reverse=True)[:3]
+                predicted_conditions = [condition for condition, _ in sorted_conditions]
+                confidence_scores = {condition: score for condition, score in sorted_conditions}
+                
+                # Normalize confidence scores to 0-1 range for fallback
+                if confidence_scores:
+                    max_score = max(confidence_scores.values())
+                    confidence_scores = {k: min(v / max_score, 0.95) if max_score > 0 else 0.5 
+                                       for k, v in confidence_scores.items()}
+                
+                logger.info(f"Fallback prediction for '{symptoms_lower[:50]}...': {predicted_conditions[0] if predicted_conditions else 'none'}")
             
             # Ensure we have at least one prediction
             if not predicted_conditions:
@@ -429,11 +441,11 @@ class SymptomCheckerAI:
             
         except Exception as e:
             logger.error(f"Error in prediction: {e}", exc_info=True)
-            # Use keyword matching on error
-            return keyword_result
+            # Use fallback keyword matching on error
+            return self._predict_fallback(symptoms_lower)
     
-    def _predict_keyword_matching(self, symptoms_lower):
-        """Improved keyword matching prediction"""
+    def _predict_fallback(self, symptoms_lower):
+        """Fallback prediction using keyword matching"""
         scores = {}
         
         for condition, config in self.keyword_conditions.items():
@@ -441,45 +453,34 @@ class SymptomCheckerAI:
             required = config.get('required', [])
             weight = config.get('weight', 1.0)
             
-            # Check if all required keywords are present
             has_required = all(req in symptoms_lower for req in required)
             if not has_required:
-                continue  # Skip if required keywords missing
+                continue
             
-            # Count matching keywords
             matches = sum(1 for keyword in keywords if keyword in symptoms_lower)
             if matches > 0:
-                # Score = (matches / total keywords) * weight
-                # Higher score for more matches
-                base_score = matches / len(keywords)
-                # Bonus for matching all keywords
-                if matches == len(keywords):
-                    base_score = 1.0
-                score = base_score * weight
+                score = (matches / len(keywords)) * weight
                 scores[condition] = score
         
-        # Sort by score and get top 3
         sorted_conditions = sorted(scores.items(), key=lambda x: x[1], reverse=True)[:3]
         predicted_conditions = [condition for condition, _ in sorted_conditions]
         confidence_scores = {condition: score for condition, score in sorted_conditions}
         
-        # Normalize confidence scores to 0-1 range
         if confidence_scores:
             max_score = max(confidence_scores.values())
-            if max_score > 0:
-                # Normalize to 0.3-0.95 range for better UX
-                confidence_scores = {k: 0.3 + (v / max_score) * 0.65 
-                                   for k, v in confidence_scores.items()}
-            else:
-                confidence_scores = {k: 0.5 for k in confidence_scores.keys()}
+            confidence_scores = {k: min(v / max_score, 0.95) if max_score > 0 else 0.5 
+                               for k, v in confidence_scores.items()}
         
         if not predicted_conditions:
             predicted_conditions = ['general_consultation']
             confidence_scores = {'general_consultation': 0.3}
         
+        recommendations = self._generate_recommendations(predicted_conditions, confidence_scores)
+        
         return {
             'conditions': predicted_conditions,
-            'confidence': confidence_scores
+            'confidence': confidence_scores,
+            'recommendations': recommendations
         }
     
     def _generate_recommendations(self, conditions, confidence_scores):

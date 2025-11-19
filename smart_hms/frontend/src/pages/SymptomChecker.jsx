@@ -183,9 +183,25 @@ const SymptomChecker = () => {
                     rows={8}
                     variant="outlined"
                     label="Symptoms Description"
-                    placeholder="Please describe your symptoms in detail. Include information such as:&#10;- When did the symptoms start?&#10;- How severe are they?&#10;- Any additional symptoms?&#10;- Any triggers or patterns you've noticed?"
+                    placeholder="e.g., fever, sore throat, shortness of breath"
                     value={symptoms}
-                    onChange={(e) => setSymptoms(e.target.value)}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (value.length <= 500) {
+                        setSymptoms(value);
+                        setError('');
+                      }
+                    }}
+                    error={symptoms.length > 0 && symptoms.length < 3}
+                    helperText={
+                      symptoms.length > 0 && symptoms.length < 3
+                        ? 'Please provide at least 3 characters'
+                        : `${symptoms.length}/500 characters`
+                    }
+                    inputProps={{
+                      'aria-label': 'Symptoms description input',
+                      maxLength: 500,
+                    }}
                     sx={{ mb: 3 }}
                     disabled={loading}
                   />
@@ -201,9 +217,20 @@ const SymptomChecker = () => {
                       type="submit"
                       variant="contained"
                       size="large"
-                      disabled={loading || !symptoms.trim()}
+                      disabled={loading || !symptoms.trim() || symptoms.trim().length < 3}
                       startIcon={loading ? <CircularProgress size={20} /> : <AutoFixHigh />}
-                      sx={{ flexGrow: 1 }}
+                      sx={{ 
+                        flexGrow: 1,
+                        transition: 'all 0.3s ease',
+                        '&:hover:not(:disabled)': {
+                          transform: 'translateY(-2px)',
+                          boxShadow: 4,
+                        },
+                        '&:disabled': {
+                          opacity: 0.6,
+                        },
+                      }}
+                      aria-label="Analyze symptoms button"
                     >
                       {loading ? 'Analyzing...' : 'Analyze Symptoms'}
                     </Button>
@@ -258,16 +285,40 @@ const SymptomChecker = () => {
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                       <LinearProgress
                         variant="determinate"
-                        value={results.confidence * 100}
-                        sx={{ flexGrow: 1, height: 8, borderRadius: 4 }}
+                        value={Math.min(results.confidence * 100, 100)}
+                        sx={{ 
+                          flexGrow: 1, 
+                          height: 10, 
+                          borderRadius: 5,
+                          backgroundColor: 'grey.200',
+                          '& .MuiLinearProgress-bar': {
+                            borderRadius: 5,
+                            transition: 'transform 0.4s ease',
+                          },
+                        }}
                         color={getConfidenceColor(results.confidence)}
+                        aria-label={`Confidence level ${Math.round(results.confidence * 100)}%`}
+                        aria-valuenow={Math.round(results.confidence * 100)}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
                       />
                       <Chip
                         label={`${Math.round(results.confidence * 100)}% ${getConfidenceLabel(results.confidence)}`}
                         color={getConfidenceColor(results.confidence)}
                         variant="outlined"
+                        sx={{ 
+                          minWidth: 120,
+                          fontWeight: 600,
+                        }}
                       />
                     </Box>
+                    {results.confidence < 0.4 && (
+                      <Alert severity="warning" sx={{ mt: 2 }}>
+                        <Typography variant="body2">
+                          Low confidence prediction. Please consult a healthcare professional for accurate diagnosis.
+                        </Typography>
+                      </Alert>
+                    )}
                   </Box>
 
                   <Divider sx={{ my: 3 }} />

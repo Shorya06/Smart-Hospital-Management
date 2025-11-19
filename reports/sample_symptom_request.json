@@ -1,0 +1,7 @@
+{
+  "symptoms": "fever headache fatigue",
+  "expected_condition": "flu",
+  "test_date": "2025-11-19",
+  "status": "verified_correct"
+}
+

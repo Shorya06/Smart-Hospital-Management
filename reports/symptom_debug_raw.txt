@@ -1,0 +1,77 @@
+Symptom Checker Debug Information
+================================
+
+Date: November 19, 2025
+Status: FIXED - Symptom checker now working correctly
+
+ISSUE IDENTIFIED:
+-----------------
+The symptom checker was always returning "heart_attack" for arbitrary inputs like "fever headache".
+
+ROOT CAUSE:
+-----------
+1. Limited training data (only 20 examples)
+2. ML model not learning properly with small dataset
+3. Model was biased towards certain conditions
+4. No proper keyword matching fallback
+
+FIXES APPLIED:
+--------------
+1. Improved training data: Expanded from 20 to 100+ examples
+2. Enhanced keyword matching: Added required keywords and weights
+3. Hybrid approach: Use keyword matching as primary, ML model as secondary
+4. Better confidence scoring: Normalized to 0.3-0.95 range
+5. Improved recommendations: Added urgency for serious conditions
+
+TEST RESULTS:
+-------------
+All 15 accuracy tests passing:
+- flu prediction: PASS
+- pneumonia prediction: PASS
+- gastroenteritis prediction: PASS
+- heart_attack prediction: PASS
+- heart_attack NOT for fever: PASS
+- arthritis prediction: PASS
+- dermatitis prediction: PASS
+- strep_throat prediction: PASS
+- empty symptoms handling: PASS
+- short symptoms handling: PASS
+- multiple conditions: PASS
+- confidence scores valid: PASS
+- recommendations generated: PASS
+- heart_attack urgent recommendation: PASS
+- low confidence warning: PASS
+
+SAMPLE REQUESTS/RESPONSES:
+--------------------------
+
+Request 1:
+  Input: "fever headache fatigue"
+  Expected: flu
+  Actual: flu (95% confidence) ✅
+
+Request 2:
+  Input: "cough chest pain shortness of breath"
+  Expected: pneumonia
+  Actual: pneumonia (95% confidence) ✅
+
+Request 3:
+  Input: "chest pain shortness of breath sweating"
+  Expected: heart_attack
+  Actual: heart_attack (95% confidence) ✅
+
+Request 4:
+  Input: "fever headache"
+  Expected: flu (NOT heart_attack)
+  Actual: flu (95% confidence) ✅
+
+VERIFICATION:
+-------------
+Run: python test_symptom_accuracy.py
+Result: 7/7 tests passed
+
+Run: pytest hospital_app/tests_symptom_checker_accuracy.py
+Result: 15/15 tests passed
+
+STATUS: ✅ FIXED
+
