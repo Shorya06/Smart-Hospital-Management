@@ -213,9 +213,9 @@ class SymptomCheckerViewSet(viewsets.ModelViewSet):
         if user.role == 'admin':
             return SymptomChecker.objects.all()
         elif user.role == 'doctor':
-            return SymptomChecker.objects.filter(patient__user__in=User.objects.filter(
-                appointments__doctor__user=user
-            ).distinct())
+            # Get patients who have appointments with this doctor
+            patient_ids = Appointment.objects.filter(doctor__user=user).values_list('patient__user_id', flat=True)
+            return SymptomChecker.objects.filter(patient__user_id__in=patient_ids)
         else:
             # Patients can only see their own symptom checks
             return SymptomChecker.objects.filter(patient__user=user)
