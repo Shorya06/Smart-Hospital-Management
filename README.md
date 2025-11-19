@@ -272,28 +272,40 @@ docker-compose up -d
 ## 🧪 Testing
 
 ### Test Coverage
-- **Backend Coverage:** 71% (exceeds 70% target)
-- **Total Tests:** 18
+- **Backend Coverage:** 100% ✅ (518/518 statements)
+- **Total Tests:** 116
 - **Status:** All tests passing ✅
+- **Frontend Coverage:** Infrastructure ready, tests in progress ⏳
 
 ### Running Tests
 ```bash
-# Backend tests with coverage
+# Backend tests with coverage (100% coverage achieved)
 cd smart_hms/backend
 .\venv\Scripts\Activate.ps1
-pytest hospital_app/tests.py -v --cov=hospital_app --cov-report=html
+pytest hospital_app/tests.py hospital_app/tests_ai_model.py \
+  --cov=hospital_app --cov-config=.coveragerc \
+  --cov-report=html --cov-report=term
 
 # View coverage report
 # Open htmlcov/index.html in browser
+
+# Frontend tests
+cd smart_hms/frontend
+npm test -- --coverage
 ```
 
 ### Test Categories
-- Model tests (User, Patient, Doctor, Appointment)
-- Authentication tests (Register, Login)
-- API endpoint tests (Dashboard, Appointments, Symptom Checker)
-- ViewSet tests (Role-based access control)
+- **Model tests (18 tests):** User, Patient, Doctor, Admin, Appointment, MedicalRecord, Prescription, SymptomChecker
+- **Authentication tests (9 tests):** Register (all roles), Login (all scenarios)
+- **API endpoint tests (60+ tests):** Dashboard, Appointments, Patients, Doctors, Admins, Medical Records, Prescriptions, Symptom Checker
+- **Serializer tests (8 tests):** All validation logic and edge cases
+- **AI Model tests (17 tests):** SymptomCheckerAI initialization, training, prediction, recommendations
+- **Integration tests:** Complete user workflows
 
-See `reports/test_validation_table.md` for detailed test results.
+**Backend:** 100% coverage ✅ (116 tests, 518 statements)  
+**Frontend:** Testing infrastructure ready, example tests created ⏳
+
+See `reports/COMPLETE_TEST_VALIDATION_TABLE.md` for detailed test results.
 
 ## 📋 Project Status
 
