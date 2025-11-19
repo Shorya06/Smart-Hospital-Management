@@ -3,17 +3,24 @@
 ## Smart Hospital Management System - Test Results
 
 **Date:** November 19, 2025  
-**Version:** 1.0-final
+**Version:** 1.0-final  
+**Backend Coverage:** 100% ✅  
+**Frontend Coverage:** In Progress ⏳
 
 ---
 
 ## Test Results Summary
 
+### Backend Tests: 116 tests, 100% coverage ✅
+
 | Category | Test Name | Status | Expected Result | Actual Result | Notes |
 |----------|-----------|--------|----------------|---------------|-------|
-| **Model Tests** |
+| **Model Tests (18 tests)** |
 | User Model | test_user_creation | ✅ PASS | User created with correct attributes | User created successfully | All fields validated |
-| User Model | test_user_get_full_name | ✅ PASS | Returns full name | Returns "Test User" | Works correctly |
+| User Model | test_user_get_full_name_both_names | ✅ PASS | Returns full name | Returns "Test User" | Works correctly |
+| User Model | test_user_get_full_name_first_only | ✅ PASS | Returns first name only | Returns "Test" | Edge case covered |
+| User Model | test_user_get_full_name_last_only | ✅ PASS | Returns last name only | Returns "User" | Edge case covered |
+| User Model | test_user_get_full_name_no_names | ✅ PASS | Returns username when no names | Returns username | Edge case covered |
 | User Model | test_user_str | ✅ PASS | String representation includes username and role | String includes both | Format correct |
 | Patient Model | test_patient_creation | ✅ PASS | Patient created with user relationship | Patient created successfully | OneToOne relationship works |
 | Doctor Model | test_doctor_creation | ✅ PASS | Doctor created with specialization | Doctor created successfully | All fields validated |

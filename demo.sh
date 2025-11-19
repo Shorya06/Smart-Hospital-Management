@@ -79,6 +79,44 @@ echo "========================================"
 echo "Setup Complete!"
 echo "========================================"
 echo ""
+echo "[7/7] Running tests..."
+echo ""
+
+# Run backend tests
+echo "Running backend tests with coverage..."
+cd backend
+source venv/bin/activate
+pytest hospital_app/tests.py hospital_app/tests_ai_model.py \
+  --cov=hospital_app --cov-config=.coveragerc \
+  --cov-report=term -q > ../reports/backend_test_results.txt 2>&1
+BACKEND_TEST_EXIT=$?
+
+# Run frontend tests
+echo "Running frontend tests..."
+cd ../frontend
+npm test -- --run --coverage > ../reports/frontend_test_results.txt 2>&1
+FRONTEND_TEST_EXIT=$?
+
+cd ..
+
+# Generate final verdict
+echo "========================================" > reports/FINAL_VERDICT.txt
+echo "FINAL VERDICT - Smart Hospital Management System v1.0" >> reports/FINAL_VERDICT.txt
+echo "========================================" >> reports/FINAL_VERDICT.txt
+echo "" >> reports/FINAL_VERDICT.txt
+echo "Date: $(date)" >> reports/FINAL_VERDICT.txt
+echo "Branch: final-deliverable" >> reports/FINAL_VERDICT.txt
+echo "Version: 1.0-final" >> reports/FINAL_VERDICT.txt
+echo "" >> reports/FINAL_VERDICT.txt
+echo "Backend Tests: $([ $BACKEND_TEST_EXIT -eq 0 ] && echo 'PASSED ✅' || echo 'FAILED ❌')" >> reports/FINAL_VERDICT.txt
+echo "Frontend Tests: $([ $FRONTEND_TEST_EXIT -eq 0 ] && echo 'PASSED ✅' || echo 'FAILED ❌')" >> reports/FINAL_VERDICT.txt
+echo "" >> reports/FINAL_VERDICT.txt
+echo "See reports/backend_test_results.txt and reports/frontend_test_results.txt for details" >> reports/FINAL_VERDICT.txt
+echo "========================================" >> reports/FINAL_VERDICT.txt
+
+cat reports/FINAL_VERDICT.txt
+
+echo ""
 echo "Access Points:"
 echo "  Frontend:  http://localhost:5173"
 echo "  Backend:   http://localhost:8000/api/"
