@@ -277,11 +277,20 @@ class SymptomCheckerAI:
     def _train_model(self):
         """Train the symptom checker model with improved data"""
         try:
+            import os
+            try:
+                fd = os.open('debug_trace.txt', os.O_WRONLY | os.O_CREAT | os.O_TRUNC)
+                os.write(fd, b"Starting _train_model\n")
+            except:
+                fd = None
+
             # Load or create data
             if os.path.exists(self.data_path):
+                if fd: os.write(fd, b"Loading existing data\n")
                 df = pd.read_csv(self.data_path)
                 logger.info(f"Loaded existing data with {len(df)} examples")
             else:
+                if fd: os.write(fd, b"Creating improved data\n")
                 df = self._create_improved_data()
             
             # Prepare data
@@ -290,12 +299,15 @@ class SymptomCheckerAI:
             
             # Get unique conditions
             self.conditions = sorted(y.unique().tolist())
+            if fd: os.write(fd, f"Conditions: {self.conditions}\n".encode())
             logger.info(f"Training model for {len(self.conditions)} conditions: {self.conditions}")
             
             # Split data
+            if fd: os.write(fd, b"Splitting data\n")
             X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
             
             # Create vectorizer with better parameters
+            if fd: os.write(fd, b"Vectorizing\n")
             self.vectorizer = TfidfVectorizer(
                 max_features=2000,
                 stop_words='english',
@@ -306,15 +318,18 @@ class SymptomCheckerAI:
             self.model = MultinomialNB(alpha=1.0)  # Add smoothing
             
             # Train model
+            if fd: os.write(fd, b"Fitting model\n")
             X_train_vectorized = self.vectorizer.fit_transform(X_train)
             self.model.fit(X_train_vectorized, y_train)
             
             # Evaluate
+            if fd: os.write(fd, b"Evaluating\n")
             X_test_vectorized = self.vectorizer.transform(X_test)
             accuracy = self.model.score(X_test_vectorized, y_test)
             logger.info(f"Model trained with accuracy: {accuracy:.2%}")
             
             # Save model
+            if fd: os.write(fd, b"Saving model\n")
             model_data = {
                 'model': self.model,
                 'vectorizer': self.vectorizer,
@@ -325,9 +340,20 @@ class SymptomCheckerAI:
             with open(self.model_path, 'wb') as f:
                 pickle.dump(model_data, f)
             logger.info(f"Model saved to {self.model_path}")
+            
+            if fd: 
+                os.write(fd, b"Finished _train_model success\n")
+                os.close(fd)
                 
         except Exception as e:
             logger.error(f"Error training model: {e}")
+            try:
+                import os
+                fd_err = os.open('debug_trace.txt', os.O_WRONLY | os.O_APPEND)
+                os.write(fd_err, f"Error: {e}\n".encode())
+                os.close(fd_err)
+            except:
+                pass
             # Fallback to improved keyword matching
             self._create_fallback_model()
     

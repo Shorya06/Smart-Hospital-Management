@@ -86,7 +86,7 @@ const Navbar = () => {
         <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
           Smart Hospital Management System
         </Typography>
-        
+
         {user && (
           <>
             <Box sx={{ display: 'flex', gap: 1, mr: 2 }}>
@@ -134,9 +134,6 @@ const Navbar = () => {
               open={Boolean(anchorEl)}
               onClose={handleClose}
             >
-              <MenuItem onClick={() => { navigate('/profile'); handleClose(); }}>
-                Profile
-              </MenuItem>
               <MenuItem onClick={handleLogout}>Logout</MenuItem>
             </Menu>
           </>

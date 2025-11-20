@@ -19,6 +19,14 @@ import {
   TextField,
   InputAdornment,
   useTheme,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Alert,
+  CircularProgress,
+  Snackbar,
+  MenuItem,
 } from '@mui/material';
 import {
   MedicalServices,
@@ -34,6 +42,7 @@ import {
   Schedule,
 } from '@mui/icons-material';
 import { useAuth } from '@/contexts/AuthContext';
+import { doctorAPI } from '@/services/api';
 
 const Doctors = () => {
   const { user } = useAuth();
@@ -41,58 +50,121 @@ const Doctors = () => {
   const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [open, setOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    user: {
+      first_name: '',
+      last_name: '',
+      email: '',
+      password: '',
+      phone_number: '',
+    },
+    specialization: '',
+    license_number: '',
+    experience_years: '',
+    consultation_fee: '',
+  });
+  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' });
 
   useEffect(() => {
-    // Mock data for demo
-    setDoctors([
-      {
-        id: 1,
-        name: 'Dr. Sarah Smith',
-        email: 'sarah.smith@hospital.com',
-        phone: '+1-555-0101',
-        specialization: 'Cardiology',
-        experience: 8,
-        license_number: 'DOC000001',
-        consultation_fee: 150,
-        is_available: true,
-        rating: 4.8,
-      },
-      {
-        id: 2,
-        name: 'Dr. Michael Johnson',
-        email: 'michael.johnson@hospital.com',
-        phone: '+1-555-0102',
-        specialization: 'Neurology',
-        experience: 12,
-        license_number: 'DOC000002',
-        consultation_fee: 200,
-        is_available: true,
-        rating: 4.9,
-      },
-      {
-        id: 3,
-        name: 'Dr. Emily Brown',
-        email: 'emily.brown@hospital.com',
-        phone: '+1-555-0103',
-        specialization: 'Dermatology',
-        experience: 6,
-        license_number: 'DOC000003',
-        consultation_fee: 120,
-        is_available: false,
-        rating: 4.7,
-      },
-    ]);
-    setLoading(false);
+    fetchDoctors();
   }, []);
 
+  const fetchDoctors = async () => {
+    try {
+      setLoading(true);
+      const response = await doctorAPI.getDoctors();
+      setDoctors(response.data.results || response.data);
+    } catch (error) {
+      console.error('Error fetching doctors:', error);
+      setSnackbar({ open: true, message: 'Failed to fetch doctors', severity: 'error' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOpen = () => {
+    setOpen(true);
+    setError('');
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+    setFormData({
+      user: {
+        first_name: '',
+        last_name: '',
+        email: '',
+        password: '',
+        phone_number: '',
+      },
+      specialization: '',
+      license_number: '',
+      experience_years: '',
+      consultation_fee: '',
+    });
+    setError('');
+  };
+
+  const handleSnackbarClose = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    if (name.includes('.')) {
+      const [parent, child] = name.split('.');
+      setFormData({
+        ...formData,
+        [parent]: {
+          ...formData[parent],
+          [child]: value,
+        },
+      });
+    } else {
+      setFormData({
+        ...formData,
+        [name]: value,
+      });
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setError('');
+
+    try {
+      await doctorAPI.createDoctor(formData);
+      await fetchDoctors();
+      handleClose();
+      setSnackbar({ open: true, message: 'Doctor added successfully!', severity: 'success' });
+    } catch (error) {
+      console.error('Error adding doctor:', error);
+      setError(error.response?.data?.error || 'Failed to add doctor. Please check the inputs.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const filteredDoctors = doctors.filter(doctor =>
-    doctor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (doctor.user?.first_name + ' ' + doctor.user?.last_name).toLowerCase().includes(searchTerm.toLowerCase()) ||
     doctor.specialization.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const getAvailabilityColor = (isAvailable) => {
     return isAvailable ? 'success' : 'error';
   };
+
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
     <Box>
@@ -110,7 +182,7 @@ const Doctors = () => {
           <Button variant="outlined" startIcon={<Search />}>
             Export
           </Button>
-          <Button variant="contained" startIcon={<Add />}>
+          <Button variant="contained" startIcon={<Add />} onClick={handleOpen}>
             Add Doctor
           </Button>
         </Box>
@@ -156,63 +228,7 @@ const Doctors = () => {
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Box>
-                  <Typography color="textSecondary" gutterBottom variant="h6">
-                    Available Today
-                  </Typography>
-                  <Typography variant="h4" sx={{ fontWeight: 600, color: 'success.main' }}>
-                    {doctors.filter(d => d.is_available).length}
-                  </Typography>
-                </Box>
-                <Avatar sx={{ backgroundColor: 'success.light' }}>
-                  <Schedule />
-                </Avatar>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Box>
-                  <Typography color="textSecondary" gutterBottom variant="h6">
-                    Specializations
-                  </Typography>
-                  <Typography variant="h4" sx={{ fontWeight: 600, color: 'info.main' }}>
-                    {new Set(doctors.map(d => d.specialization)).size}
-                  </Typography>
-                </Box>
-                <Avatar sx={{ backgroundColor: 'info.light' }}>
-                  <Star />
-                </Avatar>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Box>
-                  <Typography color="textSecondary" gutterBottom variant="h6">
-                    Avg. Experience
-                  </Typography>
-                  <Typography variant="h4" sx={{ fontWeight: 600, color: 'warning.main' }}>
-                    {Math.round(doctors.reduce((sum, d) => sum + d.experience, 0) / doctors.length)}y
-                  </Typography>
-                </Box>
-                <Avatar sx={{ backgroundColor: 'warning.light' }}>
-                  <CalendarToday />
-                </Avatar>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
+        {/* Other stats cards kept simple */}
       </Grid>
 
       {/* Doctors Table */}
@@ -230,7 +246,6 @@ const Doctors = () => {
                   <TableCell>Experience</TableCell>
                   <TableCell>License</TableCell>
                   <TableCell>Fee</TableCell>
-                  <TableCell>Rating</TableCell>
                   <TableCell>Status</TableCell>
                   <TableCell align="right">Actions</TableCell>
                 </TableRow>
@@ -245,10 +260,10 @@ const Doctors = () => {
                         </Avatar>
                         <Box>
                           <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                            {doctor.name}
+                            {doctor.user?.first_name} {doctor.user?.last_name}
                           </Typography>
                           <Typography variant="caption" color="text.secondary">
-                            {doctor.email}
+                            {doctor.user?.email}
                           </Typography>
                         </Box>
                       </Box>
@@ -258,7 +273,7 @@ const Doctors = () => {
                     </TableCell>
                     <TableCell>
                       <Typography variant="body2">
-                        {doctor.experience} years
+                        {doctor.experience_years} years
                       </Typography>
                     </TableCell>
                     <TableCell>
@@ -270,14 +285,6 @@ const Doctors = () => {
                       <Typography variant="body2">
                         ${doctor.consultation_fee}
                       </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                        <Star sx={{ fontSize: 16, color: 'warning.main', mr: 0.5 }} />
-                        <Typography variant="body2">
-                          {doctor.rating}
-                        </Typography>
-                      </Box>
                     </TableCell>
                     <TableCell>
                       <Chip
@@ -301,6 +308,137 @@ const Doctors = () => {
           </TableContainer>
         </CardContent>
       </Card>
+
+      {/* Add Doctor Dialog */}
+      <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+        <DialogTitle>Add New Doctor</DialogTitle>
+        <form onSubmit={handleSubmit}>
+          <DialogContent>
+            {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+            <Grid container spacing={2}>
+              <Grid item xs={6}>
+                <TextField
+                  fullWidth
+                  label="First Name"
+                  name="user.first_name"
+                  value={formData.user.first_name}
+                  onChange={handleChange}
+                  required
+                />
+              </Grid>
+              <Grid item xs={6}>
+                <TextField
+                  fullWidth
+                  label="Last Name"
+                  name="user.last_name"
+                  value={formData.user.last_name}
+                  onChange={handleChange}
+                  required
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Email"
+                  name="user.email"
+                  type="email"
+                  value={formData.user.email}
+                  onChange={handleChange}
+                  required
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Password"
+                  name="user.password"
+                  type="password"
+                  value={formData.user.password}
+                  onChange={handleChange}
+                  required
+                />
+              </Grid>
+              <Grid item xs={6}>
+                <TextField
+                  fullWidth
+                  label="Phone Number"
+                  name="user.phone_number"
+                  value={formData.user.phone_number}
+                  onChange={handleChange}
+                  required
+                />
+              </Grid>
+              <Grid item xs={6}>
+                <TextField
+                  fullWidth
+                  select
+                  label="Specialization"
+                  name="specialization"
+                  value={formData.specialization}
+                  onChange={handleChange}
+                  required
+                >
+                  <MenuItem value="Cardiology">Cardiology</MenuItem>
+                  <MenuItem value="Neurology">Neurology</MenuItem>
+                  <MenuItem value="Dermatology">Dermatology</MenuItem>
+                  <MenuItem value="Pediatrics">Pediatrics</MenuItem>
+                  <MenuItem value="Orthopedics">Orthopedics</MenuItem>
+                  <MenuItem value="General Medicine">General Medicine</MenuItem>
+                </TextField>
+              </Grid>
+              <Grid item xs={6}>
+                <TextField
+                  fullWidth
+                  label="License Number"
+                  name="license_number"
+                  value={formData.license_number}
+                  onChange={handleChange}
+                  required
+                />
+              </Grid>
+              <Grid item xs={6}>
+                <TextField
+                  fullWidth
+                  label="Experience (Years)"
+                  name="experience_years"
+                  type="number"
+                  value={formData.experience_years}
+                  onChange={handleChange}
+                  required
+                />
+              </Grid>
+              <Grid item xs={6}>
+                <TextField
+                  fullWidth
+                  label="Consultation Fee ($)"
+                  name="consultation_fee"
+                  type="number"
+                  value={formData.consultation_fee}
+                  onChange={handleChange}
+                  required
+                />
+              </Grid>
+            </Grid>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleClose}>Cancel</Button>
+            <Button type="submit" variant="contained" disabled={submitting}>
+              {submitting ? 'Adding...' : 'Add Doctor'}
+            </Button>
+          </DialogActions>
+        </form>
+      </Dialog>
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={handleSnackbarClose}
+        message={snackbar.message}
+      >
+        <Alert onClose={handleSnackbarClose} severity={snackbar.severity} sx={{ width: '100%' }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };

@@ -163,6 +163,19 @@ const Appointments = () => {
     setSnackbar({ open: true, message: 'Details view coming soon', severity: 'info' });
   };
 
+  const handleMarkAsDone = async (id) => {
+    if (window.confirm('Are you sure you want to mark this appointment as completed?')) {
+      try {
+        await appointmentAPI.updateAppointment(id, { status: 'completed' });
+        setSnackbar({ open: true, message: 'Appointment marked as completed', severity: 'success' });
+        fetchAppointments();
+      } catch (err) {
+        console.error('Error updating appointment:', err);
+        setSnackbar({ open: true, message: 'Failed to update appointment status', severity: 'error' });
+      }
+    }
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'completed': return 'success';
@@ -244,9 +257,11 @@ const Appointments = () => {
           >
             {viewMode === 'list' ? 'Calendar View' : 'List View'}
           </Button>
-          <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpen}>
-            Book Appointment
-          </Button>
+          {user?.role === 'patient' && (
+            <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpen}>
+              Book Appointment
+            </Button>
+          )}
         </Box>
       </Box>
 
@@ -367,12 +382,27 @@ const Appointments = () => {
 
                   <CardActions sx={{ justifyContent: 'space-between', px: 2, pb: 2 }}>
                     <Box>
-                      <IconButton size="small" color="primary" onClick={() => handleEdit(appointment.id)}>
-                        <Edit />
-                      </IconButton>
-                      <IconButton size="small" color="error" onClick={() => handleDelete(appointment.id)}>
-                        <Delete />
-                      </IconButton>
+                      {user?.role === 'patient' && (
+                        <>
+                          <IconButton size="small" color="primary" onClick={() => handleEdit(appointment.id)}>
+                            <Edit />
+                          </IconButton>
+                          <IconButton size="small" color="error" onClick={() => handleDelete(appointment.id)}>
+                            <Delete />
+                          </IconButton>
+                        </>
+                      )}
+                      {user?.role === 'doctor' && appointment.status === 'pending' && (
+                        <Button
+                          size="small"
+                          variant="contained"
+                          color="success"
+                          startIcon={<CheckCircle />}
+                          onClick={() => handleMarkAsDone(appointment.id)}
+                        >
+                          Mark Done
+                        </Button>
+                      )}
                     </Box>
                     <Button size="small" variant="outlined" onClick={() => handleViewDetails(appointment.id)}>
                       View Details
@@ -385,20 +415,22 @@ const Appointments = () => {
         </Grid>
       )}
 
-      {/* Floating Action Button */}
-      <Fab
-        color="primary"
-        aria-label="add"
-        sx={{
-          position: 'fixed',
-          bottom: 16,
-          right: 16,
-          display: { xs: 'flex', md: 'none' },
-        }}
-        onClick={handleOpen}
-      >
-        <AddIcon />
-      </Fab>
+      {/* Floating Action Button - Patient Only */}
+      {user?.role === 'patient' && (
+        <Fab
+          color="primary"
+          aria-label="add"
+          sx={{
+            position: 'fixed',
+            bottom: 16,
+            right: 16,
+            display: { xs: 'flex', md: 'none' },
+          }}
+          onClick={handleOpen}
+        >
+          <AddIcon />
+        </Fab>
+      )}
 
       {/* Appointment Dialog */}
       <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
