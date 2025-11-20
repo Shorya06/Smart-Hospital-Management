@@ -20,6 +20,7 @@ import {
 import {
   MedicalServices,
   PersonAdd,
+  Person,
   Email,
   Phone,
   Home,

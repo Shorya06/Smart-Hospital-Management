@@ -69,6 +69,9 @@ const Appointments = () => {
     try {
       setLoading(true);
       console.log('Fetching appointments...');
+      console.log('Current user:', user);
+      console.log('Access token:', localStorage.getItem('access_token') ? 'Present' : 'Not present');
+      
       const response = await appointmentAPI.getAppointments();
       console.log('Appointments response:', response);
       // Handle paginated response
@@ -79,36 +82,9 @@ const Appointments = () => {
     } catch (error) {
       console.error('Error fetching appointments:', error);
       console.error('Error details:', error.response?.data);
-      // Mock data for demo
-      setAppointments([
-        {
-          id: 1,
-          patient_name: 'John Doe',
-          doctor_name: 'Dr. Smith',
-          appointment_date: '2024-01-15',
-          appointment_time: '10:00',
-          reason: 'Regular checkup',
-          status: 'scheduled',
-        },
-        {
-          id: 2,
-          patient_name: 'Jane Smith',
-          doctor_name: 'Dr. Johnson',
-          appointment_date: '2024-01-16',
-          appointment_time: '14:30',
-          reason: 'Follow-up consultation',
-          status: 'completed',
-        },
-        {
-          id: 3,
-          patient_name: 'Mike Wilson',
-          doctor_name: 'Dr. Brown',
-          appointment_date: '2024-01-17',
-          appointment_time: '09:15',
-          reason: 'Initial consultation',
-          status: 'pending',
-        },
-      ]);
+      console.error('Error status:', error.response?.status);
+      // Don't use mock data, show empty state instead
+      setAppointments([]);
     } finally {
       setLoading(false);
     }
@@ -116,17 +92,20 @@ const Appointments = () => {
 
   const fetchDoctors = async () => {
     try {
+      console.log('Fetching doctors...');
       const response = await doctorAPI.getDoctors();
       // Handle paginated response
       const doctorsData = response.data.results || response.data;
+      console.log('Doctors data:', doctorsData);
       setDoctors(doctorsData);
     } catch (error) {
       console.error('Error fetching doctors:', error);
+      console.error('Error details:', error.response?.data);
       // Mock data for demo
       setDoctors([
-        { id: 1, name: 'Dr. Smith', specialization: 'Cardiology' },
-        { id: 2, name: 'Dr. Johnson', specialization: 'Neurology' },
-        { id: 3, name: 'Dr. Brown', specialization: 'Dermatology' },
+        { id: 1, user: { first_name: 'John', last_name: 'Smith' }, specialization: 'cardiology' },
+        { id: 2, user: { first_name: 'Sarah', last_name: 'Johnson' }, specialization: 'neurology' },
+        { id: 3, user: { first_name: 'Michael', last_name: 'Brown' }, specialization: 'orthopedics' },
       ]);
     }
   };
@@ -155,11 +134,21 @@ const Appointments = () => {
     setError('');
 
     try {
-      await appointmentAPI.createAppointment(formData);
+      // Format the appointment data properly
+      const appointmentData = {
+        doctor: parseInt(formData.doctor),
+        appointment_date: formData.appointment_date + 'T10:00:00Z', // Add time component
+        reason: formData.reason,
+      };
+      
+      console.log('Submitting appointment data:', appointmentData);
+      await appointmentAPI.createAppointment(appointmentData);
       await fetchAppointments();
       handleClose();
     } catch (error) {
-      setError(error.response?.data?.error || 'Failed to create appointment');
+      console.error('Appointment creation error:', error);
+      console.error('Error response:', error.response?.data);
+      setError(error.response?.data?.error || error.response?.data?.detail || 'Failed to create appointment');
     } finally {
       setSubmitting(false);
     }
@@ -370,7 +359,7 @@ const Appointments = () => {
               >
                 {doctors.map((doctor) => (
                   <MenuItem key={doctor.id} value={doctor.id}>
-                    {doctor.name} - {doctor.specialization}
+                    Dr. {doctor.user?.first_name} {doctor.user?.last_name} - {doctor.specialization}
                   </MenuItem>
                 ))}
               </Select>

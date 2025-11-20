@@ -18,12 +18,8 @@ class SymptomCheckerAI:
         self.model = None
         self.vectorizer = None
         self.conditions = []
-        self.keyword_conditions = {}  # Initialize keyword conditions
         self.model_path = os.path.join(settings.BASE_DIR, 'hospital_app', 'ai_model', 'symptom_model.pkl')
         self.data_path = os.path.join(settings.BASE_DIR, 'hospital_app', 'ai_model', 'symptom_data.csv')
-        
-        # Always initialize keyword matching (used as fallback/primary method)
-        self._create_fallback_model()
         
         # Initialize with improved data if no model exists
         self._initialize_model()
@@ -44,56 +40,7 @@ class SymptomCheckerAI:
                 'fever headache fatigue congestion',
                 'fever headache chills body pain',
                 'fever headache fatigue general malaise',
-                'fever cough sore throat fatigue',
-                'high fever cough body aches',
-                'fever cough fatigue weakness',
                 
-                # Common Cold (10 examples)
-                'runny nose sneezing sore throat congestion',
-                'sneezing runny nose mild fever',
-                'sore throat runny nose cough',
-                'congestion sneezing cough mild fatigue',
-                'runny nose sore throat sneezing',
-                'stuffy nose sore throat cough',
-                'sneezing congestion runny nose',
-                'mild cough runny nose sore throat',
-                'sore throat sneezing congestion',
-                'runny nose cough mild fever',
-                'cough sneezing runny nose',
-                'mild fever cough sore throat',
-
-                # COVID-19 (10 examples)
-                'fever dry cough loss of taste smell',
-                'fever cough fatigue loss of smell',
-                'loss of taste loss of smell fever',
-                'fever dry cough shortness of breath',
-                'cough fever fatigue body aches',
-                'loss of taste smell fever cough',
-                'fever cough difficulty breathing',
-                'dry cough fever fatigue loss of taste',
-                'fever cough sore throat loss of smell',
-                'fever muscle aches loss of taste',
-
-                # Allergies (8 examples)
-                'sneezing itchy eyes runny nose',
-                'itchy eyes sneezing congestion',
-                'watery eyes sneezing runny nose',
-                'sneezing itchy nose watery eyes',
-                'itchy eyes runny nose congestion',
-                'sneezing watery eyes itchy throat',
-                'runny nose itchy eyes sneezing',
-                'congestion sneezing watery eyes',
-
-                # Sinusitis (8 examples)
-                'facial pain congestion headache runny nose',
-                'sinus pressure headache congestion',
-                'facial pain nasal congestion fever',
-                'headache sinus pressure runny nose',
-                'congestion facial pain thick mucus',
-                'sinus pain headache congestion',
-                'facial pressure congestion fever',
-                'headache sinus pain runny nose',
-
                 # Pneumonia (8 examples)
                 'cough chest pain shortness of breath fever',
                 'cough chest pain difficulty breathing',
@@ -208,15 +155,7 @@ class SymptomCheckerAI:
             ],
             'condition': [
                 # Flu
-                'flu', 'flu', 'flu', 'flu', 'flu', 'flu', 'flu', 'flu', 'flu', 'flu', 'flu', 'flu', 'flu',
-                # Common Cold
-                'common_cold', 'common_cold', 'common_cold', 'common_cold', 'common_cold', 'common_cold', 'common_cold', 'common_cold', 'common_cold', 'common_cold', 'common_cold', 'common_cold',
-                # COVID-19
-                'covid_19', 'covid_19', 'covid_19', 'covid_19', 'covid_19', 'covid_19', 'covid_19', 'covid_19', 'covid_19', 'covid_19',
-                # Allergies
-                'allergies', 'allergies', 'allergies', 'allergies', 'allergies', 'allergies', 'allergies', 'allergies',
-                # Sinusitis
-                'sinusitis', 'sinusitis', 'sinusitis', 'sinusitis', 'sinusitis', 'sinusitis', 'sinusitis', 'sinusitis',
+                'flu', 'flu', 'flu', 'flu', 'flu', 'flu', 'flu', 'flu', 'flu', 'flu',
                 # Pneumonia
                 'pneumonia', 'pneumonia', 'pneumonia', 'pneumonia', 'pneumonia', 'pneumonia', 'pneumonia', 'pneumonia',
                 # Gastroenteritis
@@ -334,8 +273,7 @@ class SymptomCheckerAI:
     def _create_fallback_model(self):
         """Create an improved fallback model based on keyword matching"""
         self.conditions = [
-            'flu', 'common_cold', 'covid_19', 'allergies', 'sinusitis',
-            'pneumonia', 'gastroenteritis', 'arthritis', 'dermatitis',
+            'flu', 'pneumonia', 'gastroenteritis', 'arthritis', 'dermatitis',
             'heart_attack', 'migraine', 'asthma', 'strep_throat', 'diabetes',
             'food_poisoning', 'back_problems', 'hypertension', 'depression', 'insomnia', 'ibs'
         ]
@@ -343,28 +281,8 @@ class SymptomCheckerAI:
         # Improved keyword-based conditions with better matching
         self.keyword_conditions = {
             'flu': {
-                'keywords': ['fever', 'headache', 'fatigue', 'body aches', 'chills', 'muscle aches', 'cough', 'sore throat'],
+                'keywords': ['fever', 'headache', 'fatigue', 'body aches', 'chills', 'muscle aches', 'tiredness'],
                 'required': ['fever'],  # Fever is required for flu
-                'weight': 1.0
-            },
-            'common_cold': {
-                'keywords': ['runny nose', 'sneezing', 'sore throat', 'congestion', 'cough', 'mild fever'],
-                'required': ['runny nose', 'sneezing'],
-                'weight': 1.0
-            },
-            'covid_19': {
-                'keywords': ['fever', 'dry cough', 'loss of taste', 'loss of smell', 'fatigue', 'shortness of breath'],
-                'required': ['fever', 'cough'],
-                'weight': 1.05  # Slightly reduced weight to prevent over-prediction
-            },
-            'allergies': {
-                'keywords': ['sneezing', 'itchy eyes', 'runny nose', 'watery eyes', 'congestion', 'itchy nose'],
-                'required': ['sneezing', 'itchy eyes'],
-                'weight': 1.0
-            },
-            'sinusitis': {
-                'keywords': ['facial pain', 'sinus pressure', 'headache', 'congestion', 'runny nose', 'thick mucus'],
-                'required': ['facial pain', 'congestion'],
                 'weight': 1.0
             },
             'pneumonia': {
@@ -455,42 +373,57 @@ class SymptomCheckerAI:
         
         symptoms_lower = symptoms.lower().strip()
         
-        # Always use keyword matching first (more reliable with small dataset)
-        # Then use ML model if available and confidence is high
-        keyword_result = self._predict_keyword_matching(symptoms_lower)
-        
         try:
             if self.model and self.vectorizer:
-                # Get ML model prediction
+                # Use trained model
                 symptoms_vectorized = self.vectorizer.transform([symptoms_lower])
                 probabilities = self.model.predict_proba(symptoms_vectorized)[0]
                 
+                # Get class indices sorted by probability
                 class_indices = np.argsort(probabilities)[::-1]
+                
+                # Get top 3 predictions with confidence
                 top_3_indices = class_indices[:3]
-                ml_conditions = [self.conditions[i] for i in top_3_indices]
-                ml_confidence = {self.conditions[i]: float(probabilities[i]) for i in top_3_indices}
+                predicted_conditions = [self.conditions[i] for i in top_3_indices]
+                confidence_scores = {self.conditions[i]: float(probabilities[i]) for i in top_3_indices}
                 
-                # Use ML model if top prediction has high confidence (>0.3)
-                # Otherwise prefer keyword matching
-                top_ml_confidence = ml_confidence.get(ml_conditions[0], 0) if ml_conditions else 0
-                top_keyword_confidence = keyword_result['confidence'].get(keyword_result['conditions'][0], 0) if keyword_result['conditions'] else 0
+                # Log prediction for debugging
+                logger.info(f"Model prediction for '{symptoms_lower[:50]}...': {predicted_conditions[0]} ({confidence_scores[predicted_conditions[0]]:.2%})")
                 
-                # Require ML confidence to be at least 10% higher than keyword confidence to override
-                if top_ml_confidence > 0.3 and top_ml_confidence > (top_keyword_confidence + 0.1):
-                    # Use ML model result
-                    predicted_conditions = ml_conditions
-                    confidence_scores = ml_confidence
-                    logger.info(f"Using ML model: {predicted_conditions[0]} ({top_ml_confidence:.2%})")
-                else:
-                    # Use keyword matching (more reliable)
-                    predicted_conditions = keyword_result['conditions']
-                    confidence_scores = keyword_result['confidence']
-                    logger.info(f"Using keyword matching: {predicted_conditions[0]} ({top_keyword_confidence:.2%})")
             else:
-                # Use keyword matching
-                predicted_conditions = keyword_result['conditions']
-                confidence_scores = keyword_result['confidence']
-                logger.info(f"Using keyword matching (no model): {predicted_conditions[0] if predicted_conditions else 'none'}")
+                # Use improved fallback keyword matching
+                scores = {}
+                
+                for condition, config in self.keyword_conditions.items():
+                    keywords = config['keywords']
+                    required = config.get('required', [])
+                    weight = config.get('weight', 1.0)
+                    
+                    # Check if all required keywords are present
+                    has_required = all(req in symptoms_lower for req in required)
+                    
+                    if not has_required:
+                        continue  # Skip if required keywords missing
+                    
+                    # Count matching keywords
+                    matches = sum(1 for keyword in keywords if keyword in symptoms_lower)
+                    if matches > 0:
+                        # Score = (matches / total keywords) * weight
+                        score = (matches / len(keywords)) * weight
+                        scores[condition] = score
+                
+                # Sort by score and get top 3
+                sorted_conditions = sorted(scores.items(), key=lambda x: x[1], reverse=True)[:3]
+                predicted_conditions = [condition for condition, _ in sorted_conditions]
+                confidence_scores = {condition: score for condition, score in sorted_conditions}
+                
+                # Normalize confidence scores to 0-1 range for fallback
+                if confidence_scores:
+                    max_score = max(confidence_scores.values())
+                    confidence_scores = {k: min(v / max_score, 0.95) if max_score > 0 else 0.5 
+                                       for k, v in confidence_scores.items()}
+                
+                logger.info(f"Fallback prediction for '{symptoms_lower[:50]}...': {predicted_conditions[0] if predicted_conditions else 'none'}")
             
             # Ensure we have at least one prediction
             if not predicted_conditions:
@@ -508,11 +441,11 @@ class SymptomCheckerAI:
             
         except Exception as e:
             logger.error(f"Error in prediction: {e}", exc_info=True)
-            # Use keyword matching on error
-            return keyword_result
+            # Use fallback keyword matching on error
+            return self._predict_fallback(symptoms_lower)
     
-    def _predict_keyword_matching(self, symptoms_lower):
-        """Improved keyword matching prediction"""
+    def _predict_fallback(self, symptoms_lower):
+        """Fallback prediction using keyword matching"""
         scores = {}
         
         for condition, config in self.keyword_conditions.items():
@@ -520,45 +453,34 @@ class SymptomCheckerAI:
             required = config.get('required', [])
             weight = config.get('weight', 1.0)
             
-            # Check if all required keywords are present
             has_required = all(req in symptoms_lower for req in required)
             if not has_required:
-                continue  # Skip if required keywords missing
+                continue
             
-            # Count matching keywords
             matches = sum(1 for keyword in keywords if keyword in symptoms_lower)
             if matches > 0:
-                # Score = (matches / total keywords) * weight
-                # Higher score for more matches
-                base_score = matches / len(keywords)
-                # Bonus for matching all keywords
-                if matches == len(keywords):
-                    base_score = 1.0
-                score = base_score * weight
+                score = (matches / len(keywords)) * weight
                 scores[condition] = score
         
-        # Sort by score and get top 3
         sorted_conditions = sorted(scores.items(), key=lambda x: x[1], reverse=True)[:3]
         predicted_conditions = [condition for condition, _ in sorted_conditions]
         confidence_scores = {condition: score for condition, score in sorted_conditions}
         
-        # Normalize confidence scores to 0-1 range
         if confidence_scores:
             max_score = max(confidence_scores.values())
-            if max_score > 0:
-                # Normalize to 0.3-0.95 range for better UX
-                confidence_scores = {k: 0.3 + (v / max_score) * 0.65 
-                                   for k, v in confidence_scores.items()}
-            else:
-                confidence_scores = {k: 0.5 for k in confidence_scores.keys()}
+            confidence_scores = {k: min(v / max_score, 0.95) if max_score > 0 else 0.5 
+                               for k, v in confidence_scores.items()}
         
         if not predicted_conditions:
             predicted_conditions = ['general_consultation']
             confidence_scores = {'general_consultation': 0.3}
         
+        recommendations = self._generate_recommendations(predicted_conditions, confidence_scores)
+        
         return {
             'conditions': predicted_conditions,
-            'confidence': confidence_scores
+            'confidence': confidence_scores,
+            'recommendations': recommendations
         }
     
     def _generate_recommendations(self, conditions, confidence_scores):

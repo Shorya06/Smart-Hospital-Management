@@ -100,6 +100,57 @@ class AppointmentViewSet(viewsets.ModelViewSet):
             # Patients can only see their own appointments
             return Appointment.objects.filter(patient__user=user)
     
+    def create(self, request, *args, **kwargs):
+        """Create a new appointment"""
+        try:
+            # Get the current user's patient profile
+            if hasattr(request.user, 'patient_profile'):
+                patient = request.user.patient_profile
+            else:
+                return Response(
+                    {'error': 'User does not have a patient profile'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Get the doctor
+            doctor_id = request.data.get('doctor')
+            if not doctor_id:
+                return Response(
+                    {'error': 'Doctor is required'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            try:
+                doctor = Doctor.objects.get(id=doctor_id)
+            except Doctor.DoesNotExist:
+                return Response(
+                    {'error': 'Doctor not found'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Prepare appointment data
+            appointment_data = {
+                'patient': patient.id,
+                'doctor': doctor.id,
+                'appointment_date': request.data.get('appointment_date'),
+                'reason': request.data.get('reason'),
+                'status': 'scheduled'
+            }
+            
+            # Validate the data
+            serializer = self.get_serializer(data=appointment_data)
+            if serializer.is_valid():
+                appointment = serializer.save()
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                
+        except Exception as e:
+            return Response(
+                {'error': str(e)}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
     @action(detail=True, methods=['post'])
     def confirm(self, request, pk=None):
         """Confirm an appointment"""
@@ -162,9 +213,9 @@ class SymptomCheckerViewSet(viewsets.ModelViewSet):
         if user.role == 'admin':
             return SymptomChecker.objects.all()
         elif user.role == 'doctor':
-            return SymptomChecker.objects.filter(patient__user__in=User.objects.filter(
-                appointments__doctor__user=user
-            ).distinct())
+            # Get patients who have appointments with this doctor
+            patient_ids = Appointment.objects.filter(doctor__user=user).values_list('patient__user_id', flat=True)
+            return SymptomChecker.objects.filter(patient__user_id__in=patient_ids)
         else:
             # Patients can only see their own symptom checks
             return SymptomChecker.objects.filter(patient__user=user)
@@ -328,3 +379,61 @@ class DashboardView(APIView):
             })
         
         return Response(data)
+
+
+class AISymptomCheckerView(APIView):
+    """AI Symptom Checker API view"""
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def post(self, request):
+        """Analyze symptoms using AI"""
+        symptoms = request.data.get('symptoms', '')
+        if not symptoms:
+            return Response({'error': 'Symptoms are required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            # Initialize AI model
+            ai_model = SymptomCheckerAI()
+            
+            # Get predictions
+            predictions = ai_model.predict(symptoms)
+            
+            # Create symptom check record if user has patient profile
+            if hasattr(request.user, 'patient_profile'):
+                symptom_check = SymptomChecker.objects.create(
+                    patient=request.user.patient_profile,
+                    symptoms=symptoms,
+                    predicted_conditions=predictions.get('conditions', []),
+                    confidence_scores=predictions.get('confidence', {}),
+                    recommendations=predictions.get('recommendations', '')
+                )
+            
+            # Format response for frontend
+            conditions = predictions.get('conditions', [])
+            confidence_scores = predictions.get('confidence', {})
+            
+            # Get the top prediction
+            predicted_disease = conditions[0] if conditions else 'general_consultation'
+            confidence = confidence_scores.get(predicted_disease, 0.5)
+            
+            # Format recommendations
+            recommendations_text = predictions.get('recommendations', '')
+            recommendations = recommendations_text.split('. ') if recommendations_text else []
+            
+            response_data = {
+                'predicted_disease': predicted_disease.replace('_', ' ').title(),
+                'confidence': confidence,
+                'recommendations': recommendations,
+                'all_conditions': [
+                    {
+                        'condition': condition.replace('_', ' ').title(),
+                        'confidence': confidence_scores.get(condition, 0)
+                    }
+                    for condition in conditions
+                ]
+            }
+            
+            return Response(response_data, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

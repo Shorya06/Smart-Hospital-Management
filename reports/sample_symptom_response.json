@@ -1,0 +1,24 @@
+{
+  "predicted_disease": "Flu",
+  "confidence": 0.95,
+  "recommendations": [
+    "High probability of Flu (confidence: 95%). Please consult a doctor as soon as possible."
+  ],
+  "all_conditions": [
+    {
+      "condition": "Flu",
+      "confidence": 0.95
+    },
+    {
+      "condition": "Strep Throat",
+      "confidence": 0.45
+    },
+    {
+      "condition": "Migraine",
+      "confidence": 0.35
+    }
+  ],
+  "status": "accurate",
+  "test_date": "2025-11-19"
+}
+

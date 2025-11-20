@@ -24,7 +24,7 @@ urlpatterns = [
     path('dashboard/', views.DashboardView.as_view(), name='dashboard'),
     
     # AI endpoints
-    path('ai/symptom-checker/', views.SymptomCheckerViewSet.as_view({'post': 'analyze'}), name='ai_symptom_checker'),
+    path('ai/symptom-checker/', views.AISymptomCheckerView.as_view(), name='ai_symptom_checker'),
     
     # Include router URLs
     path('', include(router.urls)),
