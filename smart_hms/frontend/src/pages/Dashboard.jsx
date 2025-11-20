@@ -33,12 +33,14 @@ import {
   CheckCircle,
   Pending,
 } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { dashboardAPI } from '@/services/api';
 
 const Dashboard = () => {
   const { user } = useAuth();
   const theme = useTheme();
+  const navigate = useNavigate();
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -86,27 +88,19 @@ const Dashboard = () => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'completed':
-        return 'success';
-      case 'scheduled':
-        return 'info';
-      case 'pending':
-        return 'warning';
-      default:
-        return 'default';
+      case 'completed': return 'success';
+      case 'scheduled': return 'info';
+      case 'pending': return 'warning';
+      default: return 'default';
     }
   };
 
   const getStatusIcon = (status) => {
     switch (status) {
-      case 'completed':
-        return <CheckCircle />;
-      case 'scheduled':
-        return <Schedule />;
-      case 'pending':
-        return <Pending />;
-      default:
-        return <Assignment />;
+      case 'completed': return <CheckCircle />;
+      case 'scheduled': return <Schedule />;
+      case 'pending': return <Pending />;
+      default: return <Assignment />;
     }
   };
 
@@ -182,7 +176,11 @@ const Dashboard = () => {
           <IconButton onClick={() => window.location.reload()}>
             <Refresh />
           </IconButton>
-          <Button variant="contained" startIcon={<Add />}>
+          <Button
+            variant="contained"
+            startIcon={<Add />}
+            onClick={() => navigate('/appointments')}
+          >
             Quick Action
           </Button>
         </Box>
@@ -280,7 +278,11 @@ const Dashboard = () => {
             <Typography variant="h6" sx={{ fontWeight: 600 }}>
               Recent Appointments
             </Typography>
-            <Button variant="outlined" size="small">
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={() => navigate('/appointments')}
+            >
               View All
             </Button>
           </Box>
@@ -310,10 +312,10 @@ const Dashboard = () => {
                     </TableCell>
                     <TableCell>
                       <Typography variant="body2">
-                        {appointment.date ? 
-                          `${appointment.date} at ${appointment.time}` : 
-                          new Date(appointment.appointment_date).toLocaleDateString() + ' at ' + 
-                          new Date(appointment.appointment_date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+                        {appointment.date ?
+                          `${appointment.date} at ${appointment.time}` :
+                          new Date(appointment.appointment_date).toLocaleDateString() + ' at ' +
+                          new Date(appointment.appointment_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                         }
                       </Typography>
                     </TableCell>
@@ -327,7 +329,10 @@ const Dashboard = () => {
                       />
                     </TableCell>
                     <TableCell align="right">
-                      <IconButton size="small">
+                      <IconButton
+                        size="small"
+                        onClick={() => navigate('/appointments')}
+                      >
                         <Assignment />
                       </IconButton>
                     </TableCell>
