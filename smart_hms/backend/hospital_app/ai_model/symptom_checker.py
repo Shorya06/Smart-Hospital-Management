@@ -44,7 +44,56 @@ class SymptomCheckerAI:
                 'fever headache fatigue congestion',
                 'fever headache chills body pain',
                 'fever headache fatigue general malaise',
+                'fever cough sore throat fatigue',
+                'high fever cough body aches',
+                'fever cough fatigue weakness',
                 
+                # Common Cold (10 examples)
+                'runny nose sneezing sore throat congestion',
+                'sneezing runny nose mild fever',
+                'sore throat runny nose cough',
+                'congestion sneezing cough mild fatigue',
+                'runny nose sore throat sneezing',
+                'stuffy nose sore throat cough',
+                'sneezing congestion runny nose',
+                'mild cough runny nose sore throat',
+                'sore throat sneezing congestion',
+                'runny nose cough mild fever',
+                'cough sneezing runny nose',
+                'mild fever cough sore throat',
+
+                # COVID-19 (10 examples)
+                'fever dry cough loss of taste smell',
+                'fever cough fatigue loss of smell',
+                'loss of taste loss of smell fever',
+                'fever dry cough shortness of breath',
+                'cough fever fatigue body aches',
+                'loss of taste smell fever cough',
+                'fever cough difficulty breathing',
+                'dry cough fever fatigue loss of taste',
+                'fever cough sore throat loss of smell',
+                'fever muscle aches loss of taste',
+
+                # Allergies (8 examples)
+                'sneezing itchy eyes runny nose',
+                'itchy eyes sneezing congestion',
+                'watery eyes sneezing runny nose',
+                'sneezing itchy nose watery eyes',
+                'itchy eyes runny nose congestion',
+                'sneezing watery eyes itchy throat',
+                'runny nose itchy eyes sneezing',
+                'congestion sneezing watery eyes',
+
+                # Sinusitis (8 examples)
+                'facial pain congestion headache runny nose',
+                'sinus pressure headache congestion',
+                'facial pain nasal congestion fever',
+                'headache sinus pressure runny nose',
+                'congestion facial pain thick mucus',
+                'sinus pain headache congestion',
+                'facial pressure congestion fever',
+                'headache sinus pain runny nose',
+
                 # Pneumonia (8 examples)
                 'cough chest pain shortness of breath fever',
                 'cough chest pain difficulty breathing',
@@ -159,7 +208,15 @@ class SymptomCheckerAI:
             ],
             'condition': [
                 # Flu
-                'flu', 'flu', 'flu', 'flu', 'flu', 'flu', 'flu', 'flu', 'flu', 'flu',
+                'flu', 'flu', 'flu', 'flu', 'flu', 'flu', 'flu', 'flu', 'flu', 'flu', 'flu', 'flu', 'flu',
+                # Common Cold
+                'common_cold', 'common_cold', 'common_cold', 'common_cold', 'common_cold', 'common_cold', 'common_cold', 'common_cold', 'common_cold', 'common_cold', 'common_cold', 'common_cold',
+                # COVID-19
+                'covid_19', 'covid_19', 'covid_19', 'covid_19', 'covid_19', 'covid_19', 'covid_19', 'covid_19', 'covid_19', 'covid_19',
+                # Allergies
+                'allergies', 'allergies', 'allergies', 'allergies', 'allergies', 'allergies', 'allergies', 'allergies',
+                # Sinusitis
+                'sinusitis', 'sinusitis', 'sinusitis', 'sinusitis', 'sinusitis', 'sinusitis', 'sinusitis', 'sinusitis',
                 # Pneumonia
                 'pneumonia', 'pneumonia', 'pneumonia', 'pneumonia', 'pneumonia', 'pneumonia', 'pneumonia', 'pneumonia',
                 # Gastroenteritis
@@ -277,7 +334,8 @@ class SymptomCheckerAI:
     def _create_fallback_model(self):
         """Create an improved fallback model based on keyword matching"""
         self.conditions = [
-            'flu', 'pneumonia', 'gastroenteritis', 'arthritis', 'dermatitis',
+            'flu', 'common_cold', 'covid_19', 'allergies', 'sinusitis',
+            'pneumonia', 'gastroenteritis', 'arthritis', 'dermatitis',
             'heart_attack', 'migraine', 'asthma', 'strep_throat', 'diabetes',
             'food_poisoning', 'back_problems', 'hypertension', 'depression', 'insomnia', 'ibs'
         ]
@@ -285,8 +343,28 @@ class SymptomCheckerAI:
         # Improved keyword-based conditions with better matching
         self.keyword_conditions = {
             'flu': {
-                'keywords': ['fever', 'headache', 'fatigue', 'body aches', 'chills', 'muscle aches', 'tiredness'],
+                'keywords': ['fever', 'headache', 'fatigue', 'body aches', 'chills', 'muscle aches', 'cough', 'sore throat'],
                 'required': ['fever'],  # Fever is required for flu
+                'weight': 1.0
+            },
+            'common_cold': {
+                'keywords': ['runny nose', 'sneezing', 'sore throat', 'congestion', 'cough', 'mild fever'],
+                'required': ['runny nose', 'sneezing'],
+                'weight': 1.0
+            },
+            'covid_19': {
+                'keywords': ['fever', 'dry cough', 'loss of taste', 'loss of smell', 'fatigue', 'shortness of breath'],
+                'required': ['fever', 'cough'],
+                'weight': 1.05  # Slightly reduced weight to prevent over-prediction
+            },
+            'allergies': {
+                'keywords': ['sneezing', 'itchy eyes', 'runny nose', 'watery eyes', 'congestion', 'itchy nose'],
+                'required': ['sneezing', 'itchy eyes'],
+                'weight': 1.0
+            },
+            'sinusitis': {
+                'keywords': ['facial pain', 'sinus pressure', 'headache', 'congestion', 'runny nose', 'thick mucus'],
+                'required': ['facial pain', 'congestion'],
                 'weight': 1.0
             },
             'pneumonia': {
@@ -397,7 +475,8 @@ class SymptomCheckerAI:
                 top_ml_confidence = ml_confidence.get(ml_conditions[0], 0) if ml_conditions else 0
                 top_keyword_confidence = keyword_result['confidence'].get(keyword_result['conditions'][0], 0) if keyword_result['conditions'] else 0
                 
-                if top_ml_confidence > 0.3 and top_ml_confidence > top_keyword_confidence:
+                # Require ML confidence to be at least 10% higher than keyword confidence to override
+                if top_ml_confidence > 0.3 and top_ml_confidence > (top_keyword_confidence + 0.1):
                     # Use ML model result
                     predicted_conditions = ml_conditions
                     confidence_scores = ml_confidence

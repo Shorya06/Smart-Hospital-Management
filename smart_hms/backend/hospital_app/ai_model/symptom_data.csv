@@ -1,21 +1,134 @@
 symptoms,condition
-fever headache fatigue,flu
+fever headache fatigue body aches,flu
+fever headache chills fatigue,flu
+fever cough headache body pain,flu
+fever headache sore throat fatigue,flu
+fever headache muscle aches tiredness,flu
+fever headache runny nose fatigue,flu
+fever headache body aches weakness,flu
+fever headache fatigue congestion,flu
+fever headache chills body pain,flu
+fever headache fatigue general malaise,flu
+fever cough sore throat fatigue,flu
+high fever cough body aches,flu
+fever cough fatigue weakness,flu
+runny nose sneezing sore throat congestion,common_cold
+sneezing runny nose mild fever,common_cold
+sore throat runny nose cough,common_cold
+congestion sneezing cough mild fatigue,common_cold
+runny nose sore throat sneezing,common_cold
+stuffy nose sore throat cough,common_cold
+sneezing congestion runny nose,common_cold
+mild cough runny nose sore throat,common_cold
+sore throat sneezing congestion,common_cold
+runny nose cough mild fever,common_cold
+cough sneezing runny nose,common_cold
+mild fever cough sore throat,common_cold
+fever dry cough loss of taste smell,covid_19
+fever cough fatigue loss of smell,covid_19
+loss of taste loss of smell fever,covid_19
+fever dry cough shortness of breath,covid_19
+cough fever fatigue body aches,covid_19
+loss of taste smell fever cough,covid_19
+fever cough difficulty breathing,covid_19
+dry cough fever fatigue loss of taste,covid_19
+fever cough sore throat loss of smell,covid_19
+fever muscle aches loss of taste,covid_19
+sneezing itchy eyes runny nose,allergies
+itchy eyes sneezing congestion,allergies
+watery eyes sneezing runny nose,allergies
+sneezing itchy nose watery eyes,allergies
+itchy eyes runny nose congestion,allergies
+sneezing watery eyes itchy throat,allergies
+runny nose itchy eyes sneezing,allergies
+congestion sneezing watery eyes,allergies
+facial pain congestion headache runny nose,sinusitis
+sinus pressure headache congestion,sinusitis
+facial pain nasal congestion fever,sinusitis
+headache sinus pressure runny nose,sinusitis
+congestion facial pain thick mucus,sinusitis
+sinus pain headache congestion,sinusitis
+facial pressure congestion fever,sinusitis
+headache sinus pain runny nose,sinusitis
+cough chest pain shortness of breath fever,pneumonia
+cough chest pain difficulty breathing,pneumonia
+cough chest pain fever chills,pneumonia
 cough chest pain shortness of breath,pneumonia
-nausea vomiting diarrhea,gastroenteritis
+cough chest pain fever fatigue,pneumonia
+cough chest pain breathing problems,pneumonia
+cough chest pain fever weakness,pneumonia
+cough chest pain shortness breath,pneumonia
+nausea vomiting diarrhea stomach pain,gastroenteritis
+nausea vomiting diarrhea abdominal pain,gastroenteritis
+nausea vomiting diarrhea cramps,gastroenteritis
+nausea vomiting stomach pain,gastroenteritis
+nausea vomiting diarrhea dehydration,gastroenteritis
+nausea vomiting diarrhea fever,gastroenteritis
+nausea vomiting stomach cramps,gastroenteritis
+nausea vomiting diarrhea bloating,gastroenteritis
 joint pain swelling stiffness,arthritis
-rash itching redness,dermatitis
-dizziness confusion memory loss,alzheimer
-chest pain shortness of breath sweating,heart_attack
-abdominal pain bloating nausea,ibs
-back pain stiffness limited movement,back_problems
-sore throat fever swollen glands,strep_throat
-high blood pressure chest pain,hypertension
-skin rash joint pain fatigue,lupus
-headache blurred vision nausea,migraine
+joint pain swelling morning stiffness,arthritis
+joint pain stiffness limited movement,arthritis
+joint pain swelling inflammation,arthritis
+joint pain stiffness pain,arthritis
+joint pain swelling reduced mobility,arthritis
+rash itching redness skin,dermatitis
+rash itching redness inflammation,dermatitis
+rash itching redness dry skin,dermatitis
+rash itching redness irritation,dermatitis
+rash itching redness bumps,dermatitis
+rash itching redness scaly skin,dermatitis
+chest pain shortness of breath sweating nausea,heart_attack
+chest pain left arm pain shortness of breath,heart_attack
+severe chest pain sweating dizziness,heart_attack
+chest pain radiating to arm shortness of breath,heart_attack
+chest pain pressure sweating,heart_attack
+chest pain jaw pain shortness of breath,heart_attack
+headache blurred vision nausea sensitivity,migraine
+severe headache nausea light sensitivity,migraine
+headache throbbing pain nausea,migraine
+headache visual disturbances nausea,migraine
+severe headache one side nausea,migraine
+headache sensitivity to light sound,migraine
 difficulty breathing wheezing cough,asthma
-stomach pain nausea vomiting,food_poisoning
-muscle pain weakness fatigue,fibromyalgia
+shortness of breath wheezing chest tightness,asthma
+wheezing cough difficulty breathing,asthma
+breathing problems wheezing cough,asthma
+shortness of breath wheezing,asthma
+wheezing chest tightness cough,asthma
+sore throat fever swollen glands,strep_throat
+sore throat fever difficulty swallowing,strep_throat
+sore throat fever white patches,strep_throat
+sore throat fever headache,strep_throat
+sore throat fever swollen lymph nodes,strep_throat
+frequent urination thirst fatigue weight loss,diabetes
+frequent urination excessive thirst fatigue,diabetes
+frequent urination thirst blurred vision,diabetes
+frequent urination thirst weight loss,diabetes
+excessive thirst frequent urination fatigue,diabetes
+stomach pain nausea vomiting diarrhea,food_poisoning
+stomach pain nausea vomiting cramps,food_poisoning
+nausea vomiting stomach pain diarrhea,food_poisoning
+stomach pain vomiting diarrhea,food_poisoning
+nausea vomiting diarrhea abdominal pain,food_poisoning
+back pain stiffness limited movement,back_problems
+back pain stiffness difficulty moving,back_problems
+lower back pain stiffness,back_problems
+back pain stiffness muscle spasms,back_problems
+back pain stiffness radiating pain,back_problems
+high blood pressure chest pain,hypertension
+high blood pressure headache dizziness,hypertension
+high blood pressure chest discomfort,hypertension
+elevated blood pressure headache,hypertension
 anxiety depression mood changes,depression
+depression mood changes loss of interest,depression
+depression anxiety fatigue,depression
+depression mood changes sleep problems,depression
 sleep problems fatigue irritability,insomnia
-weight loss fatigue weakness,diabetes
-frequent urination thirst fatigue,diabetes
+difficulty sleeping fatigue,insomnia
+sleep problems fatigue mood changes,insomnia
+insomnia fatigue difficulty concentrating,insomnia
+abdominal pain bloating nausea,ibs
+abdominal pain bloating diarrhea,ibs
+abdominal pain bloating constipation,ibs
+abdominal pain bloating cramping,ibs
