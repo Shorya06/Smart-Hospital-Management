@@ -39,22 +39,18 @@ vi.mock('../components/Auth/Register', () => ({
 describe('App', () => {
   it('renders without crashing', () => {
     render(
-      <BrowserRouter>
-        <AuthProvider>
-          <App />
-        </AuthProvider>
-      </BrowserRouter>
+      <AuthProvider>
+        <App />
+      </AuthProvider>
     )
   })
 
   it('renders login route', () => {
     window.history.pushState({}, '', '/login')
     render(
-      <BrowserRouter>
-        <AuthProvider>
-          <App />
-        </AuthProvider>
-      </BrowserRouter>
+      <AuthProvider>
+        <App />
+      </AuthProvider>
     )
     // Login component should be rendered
     expect(screen.getByText(/login component/i)).toBeInTheDocument()

@@ -78,18 +78,22 @@ class SymptomCheckerAITest(TestCase):
     
     @patch('hospital_app.ai_model.symptom_checker.os.path.exists')
     @patch('hospital_app.ai_model.symptom_checker.pd.read_csv')
-    def test_train_model_with_existing_data(self, mock_read_csv, mock_exists):
+    @patch('hospital_app.ai_model.symptom_checker.os.makedirs')
+    def test_train_model_with_existing_data(self, mock_makedirs, mock_read_csv, mock_exists):
         """Test model training with existing CSV data"""
         mock_exists.return_value = True
+        # Provide enough data for train_test_split
         mock_df = pd.DataFrame({
-            'symptoms': ['fever headache', 'cough'],
-            'condition': ['flu', 'cold']
+            'symptoms': ['fever headache', 'cough', 'fever', 'coughing', 'headache', 'sore throat'],
+            'condition': ['flu', 'cold', 'flu', 'cold', 'flu', 'cold']
         })
         mock_read_csv.return_value = mock_df
         
         with patch('hospital_app.ai_model.symptom_checker.pickle.dump'), \
              patch('hospital_app.ai_model.symptom_checker.open', mock_open()), \
-             patch('hospital_app.ai_model.symptom_checker.os.path.join', return_value='test.pkl'):
+             patch('hospital_app.ai_model.symptom_checker.os.path.join', return_value='test.pkl'), \
+             patch.object(SymptomCheckerAI, '_initialize_model'): # Prevent init from running
+            
             ai = SymptomCheckerAI()
             ai._train_model()
             
@@ -107,10 +111,12 @@ class SymptomCheckerAITest(TestCase):
         with patch.object(SymptomCheckerAI, '_create_dummy_data') as mock_create, \
              patch('hospital_app.ai_model.symptom_checker.pickle.dump'), \
              patch('builtins.open', mock_open()), \
-             patch('hospital_app.ai_model.symptom_checker.os.path.join', return_value='test.pkl'):
+             patch('hospital_app.ai_model.symptom_checker.os.path.join', return_value='test.pkl'), \
+             patch.object(SymptomCheckerAI, '_initialize_model'): # Prevent init from running
+            
             mock_df = pd.DataFrame({
-                'symptoms': ['fever', 'cough'],
-                'condition': ['flu', 'cold']
+                'symptoms': ['fever', 'cough', 'fever', 'cough'],
+                'condition': ['flu', 'cold', 'flu', 'cold']
             })
             mock_create.return_value = mock_df
             
@@ -129,8 +135,13 @@ class SymptomCheckerAITest(TestCase):
         mock_exists.return_value = True
         mock_read_csv.side_effect = Exception('CSV error')
         
-        with patch.object(SymptomCheckerAI, '_create_fallback_model') as mock_fallback:
+        with patch.object(SymptomCheckerAI, '_create_fallback_model') as mock_fallback, \
+             patch.object(SymptomCheckerAI, '_initialize_model'): # Prevent init from running
+            
             ai = SymptomCheckerAI()
+            # Reset mock because __init__ calls _create_fallback_model
+            mock_fallback.reset_mock()
+            
             ai._train_model()
             mock_fallback.assert_called_once()
     
